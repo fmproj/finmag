@@ -1,7 +1,7 @@
-const https = require('https');
-const fs = require('fs');
+import { request } from 'https';
+import { writeFile, renameSync, readFileSync } from 'fs';
 
-function mtgApiRequest(endpoint) {
+function stockApiRequest(endpoint) {
     const options = {
         hostname: 'api.mtgstocks.com',
         path: endpoint,
@@ -12,7 +12,7 @@ function mtgApiRequest(endpoint) {
     };
 
     return new Promise((resolve, reject) => {
-        const req = https.request(options, (res) => {
+        const req = request(options, (res) => {
             let data = '';
             
             res.on('data', (chunk) => {
@@ -33,24 +33,32 @@ function mtgApiRequest(endpoint) {
 }
 
 function readJsonFile(filePath) {
-    return new Promise((resolve, reject) => {
-      fs.readFile(filePath + '.json', 'utf8', (err, data) => {
-        if (err) {
-          console.error('Error reading file:', err);
-          reject(err);
-          return;
-        }
-  
-        resolve(JSON.parse(data));
-      });
-    });
+    try {
+        return JSON.parse(readFileSync(filePath + '.json', 'utf8'));
+    } catch (err) {
+        console.error(err.message);
+    }
 }
 
 async function updateRegularInterests() {
+    let currentDate = new Date().toJSON().slice(0, 10);
+    const data = readJsonFile('rint');
+    if (currentDate == data['date']) {
+        console.log("No need to update");
+        return;
+    }
+    let oldDate = data['date'];
+
     try {
-        const response = await mtgApiRequest('/interests/average/regular');
-        data = JSON.parse(response);
-        fs.writeFile('regular_interests.json', JSON.stringify(data), (err) => {
+        renameSync('rint.json', 'archive/rint_' + oldDate + '.json');
+    } catch (err) {
+        console.error(err.message);
+    }
+
+    try {
+        const response = await stockApiRequest('/interests/average/regular');
+        let data = JSON.parse(response);
+        writeFile('rint.json', JSON.stringify(data), (err) => {
             if (err) {
                 console.log('Error writing data to file: ', err);
             }
@@ -60,10 +68,4 @@ async function updateRegularInterests() {
     }
 }
 
-readJsonFile('rint')
-    .then(data => {
-        console.log(data['interests'][0]['print']['name']);
-    })
-    .catch(err => {
-        console.log('Error: ', err);
-    });
+updateRegularInterests();
