@@ -9,7 +9,7 @@ function knightApiRequest(name) {
         .then(res => {
             console.log(`Status: ${res.status}`);
             const $ = load(res.data);
-            const trs = $('.kusovkytext').eq(1).find('tbody').children('tr');
+            const trs = $('table.kusovkytext').eq(1).find('tbody').children('tr');
 
             trs.each((index, tr) => {
                 const i = index % 3;
@@ -29,4 +29,4 @@ function knightApiRequest(name) {
         });
 }
 
-knightApiRequest('god-eternal+kefnet');
+knightApiRequest('sol+ring');
