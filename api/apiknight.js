@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { load } from 'cheerio';
 
-async function knightApiRequest(name) {
+export async function knightApiRequest(name) {
     try {
         const data = `edice_magic=libovolna&rarita=A&foil=A&jmenokarty=${encodeURIComponent(name)}&triditpodle=ceny&submit=Vyhledej`
      
@@ -9,7 +9,7 @@ async function knightApiRequest(name) {
         const $ = load(response.data);
         const trs = $('table.kusovkytext').eq(1).find('tbody').children('tr');
         const variants = [];
-        let variant;
+        let variant = {};
         
         trs.each((index, tr) => {
             const i = index % 3;
